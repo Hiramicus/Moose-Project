@@ -79,6 +79,12 @@ public class InsuranceEvent
 		this.eventHandled = eventHandled;
 	}
 	
-	
+	public String toString()
+	{
+		return String.format("%-35s %-40s %-20s %-20s %-12s\n"
+				+ "%-35s %-40s %-20s $%-,20.2f $%-,12.2f\n", 
+				"Date", "Event", "Insurance Carrier", "Level of Coverage", "Premium",
+				this.eventDate, this.eventName, this.insuranceCarrier, this.levelOfCoverage, this.premium);
+	}
 	
 }
