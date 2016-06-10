@@ -1,6 +1,7 @@
 import java.util.Date;
+import java.io.Serializable;
 
-public class InsuranceEvent
+public class InsuranceEvent implements Serializable
 {
 	private Date eventDate;
 	private String eventName;
@@ -8,6 +9,7 @@ public class InsuranceEvent
 	private double levelOfCoverage;
 	private double premium;
 	private boolean eventHandled;
+	private int delays;
 	
 	public InsuranceEvent(Date eventDate, String eventName, String insuranceCarrier, double levelOfCoverage, double premium)
 	{
@@ -17,6 +19,7 @@ public class InsuranceEvent
 		this.levelOfCoverage = levelOfCoverage;
 		this.premium = premium;
 		this.eventHandled = false;
+		this.delays = 0;
 	}
 
 	public Date getEventDate()
@@ -77,6 +80,31 @@ public class InsuranceEvent
 	public void setEventHandled(boolean eventHandled)
 	{
 		this.eventHandled = eventHandled;
+	}
+	
+	public int getDelays()
+	{
+		return delays;
+	}
+	
+	private void setDelays(int newDelay)
+	{
+		this.delays = newDelay;
+	}
+	
+	public void delayPayment()
+	{
+		delays++;
+	}
+	
+	public void resetDelays()
+	{
+		delays = 0;
+	}
+	
+	public boolean reminderWorthy()
+	{
+		return true;
 	}
 	
 	public String toString()
