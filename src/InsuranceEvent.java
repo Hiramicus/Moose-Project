@@ -10,7 +10,24 @@ public class InsuranceEvent implements Serializable
 	private double premium;
 	private boolean eventHandled;
 	private int delays;
+	// ONEMONTH, etc., mean 'due in less than one month but more than two weeks', etc.
+	public enum PaymentStatus { NOTDUESOON, ONEMONTH, TWOWEEKS, ONEWEEK, OVERDUE }
+	PaymentStatus currentPaymentStatus;
+	PaymentStatus lastReminderStatus; // The status when the last reminder was acknowledged.
 	
+	public InsuranceEvent()
+	{
+		eventDate = new Date();
+		eventName = "";
+		insuranceCarrier = "";
+		levelOfCoverage = 0.0;
+		premium = 0.0;
+		eventHandled = false;
+		delays = 0;
+		currentPaymentStatus = PaymentStatus.NOTDUESOON;
+		lastReminderStatus = PaymentStatus.NOTDUESOON;
+	}
+
 	public InsuranceEvent(Date eventDate, String eventName, String insuranceCarrier, double levelOfCoverage, double premium)
 	{
 		this.eventDate = eventDate;

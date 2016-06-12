@@ -1,4 +1,5 @@
 import java.nio.file.Paths;
+import java.util.Scanner;
 import java.util.Date;
 import java.nio.file.Path;
 import java.io.IOException;
@@ -12,6 +13,8 @@ public class RemindersRunner {
 		Path file = Paths.get("FirstInsurance.ser");
 		
 		System.out.println("Hello world!");
+		Scanner s = new Scanner(System.in);
+		s.next();
 
 	}
 

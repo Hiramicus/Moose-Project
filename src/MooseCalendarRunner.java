@@ -80,6 +80,7 @@ public class MooseCalendarRunner {
 			throws InterruptedException {
 		
 		Path file = Paths.get("FirstInsurance.ser");
+		int choice = 0;
 		InsuranceEvent testInsurance1 
 		= new InsuranceEvent(new Date(), "Property1", "ABC", 10000.0, 100.0);
 		InsuranceEvent testInsurance2 
@@ -115,12 +116,29 @@ public class MooseCalendarRunner {
 
 		
 		System.out.println("Moose Calendar by TwoGuysInAShed Productions");
-		/*
-		 */
 
-		ProcessBuilder runSomeCode = new ProcessBuilder("cmd.exe", "/C", "start" );
+		while (choice != -1)
+		{
+			choice = taskChoice();
+			switch (choice)
+			{
+			case 1 :
+				addInsuranceEvent();
+				break;
+			default :
+			}
+		}
+
+		// This calls the windows command interpreter (cmd.exe) with
+		// flag /C and arguments start, java, and RemindersRunner. The
+		// flag tells it to execute the following strings as a command
+		// line command, viz. "start java RemindersRunner". Start is a
+		// command that opens a new console window and it itself can
+		// receive a command or program along with its arguments as an
+		// argument, and in this case, it's java RemindersRunner.
+		ProcessBuilder runSomeCode = new ProcessBuilder("cmd.exe", "/C", "start", "java", "RemindersRunner" );
 		
-		runSomeCode.directory(new File("C:\\Users\\Glew\\workspace\\Moose-Project\\bin"));
+		runSomeCode.directory(new File("C:\\Users\\Hiram\\workspace\\Moose-Project\\bin"));
 		
 		try { runSomeCode.start(); } catch (IOException ex) { ex.printStackTrace(); System.out.print("here");}
 	}
