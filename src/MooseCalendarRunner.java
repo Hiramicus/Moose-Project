@@ -1,5 +1,9 @@
 import java.io.IOException;
+import java.io.EOFException;
 import java.io.InputStream;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.text.DateFormat;
 import java.text.ParseException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -13,12 +17,83 @@ import java.nio.file.StandardOpenOption.*;
 import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.File;
+import java.text.ParsePosition;
 
 
 public class MooseCalendarRunner {
 
-	public static final Path insuranceEventPath = Paths.get("InsuranceEvents.ser");
+	// This is the only file we need. It holds the serialized objects.
+	public static final Path insuranceEventPath = Paths.get("InsuranceEventList.ser");
 	
+	// This method loads the contents of the file into memory.
+	public static ArrayList<InsuranceEvent> loadEvents ()
+	{
+		ArrayList<InsuranceEvent> insuranceEventList = new ArrayList<InsuranceEvent>();
+		// Let's try not to open non-existing files.
+		if (Files.exists(insuranceEventPath))
+		{
+			ObjectInputStream in = null;
+			try
+			{
+				// Quite a bit of indirection ahead. First,
+				// Files.readAllBytes takes the file and outputs a raw
+				// byte array. That's just an array, so to actually call
+				// input stream methods, it gets turned into a
+				// ByteArayInputStream, and we use ObjectInputStream to
+				// actually deserialize that data.
+				byte[] allBytes = Files.readAllBytes(insuranceEventPath);
+				ByteArrayInputStream byteis = new ByteArrayInputStream(allBytes);
+				in = new ObjectInputStream(byteis);
+			}
+			catch (IOException ex)
+			{
+				ex.printStackTrace();
+			}
+
+			// Reading the objects from the byte array.
+			// We will loop through until we get an EOF exception.
+			boolean notEOF = true;
+			while(notEOF)
+			{
+				try
+				{
+					insuranceEventList.add((InsuranceEvent) in.readObject());
+				}
+				catch(EOFException eofex)
+				{
+					notEOF = false;
+				}
+				catch (ClassNotFoundException | IOException ex)
+				{
+					ex.printStackTrace();
+				}
+			}
+		}
+		// Note that this can return an empty ArrayList.
+		return insuranceEventList;
+	}
+
+	// This method serializes and saves the insuranceEvent array.
+	// Note that this method completely overwrites the file.
+	public static void saveEvents (ArrayList<InsuranceEvent> insuranceEventList)
+	{
+		ByteArrayOutputStream byteos = new ByteArrayOutputStream();
+		ObjectOutputStream out = null;
+		try
+		{
+			out = new ObjectOutputStream(byteos);
+			for (InsuranceEvent ievent : insuranceEventList)
+			{
+				out.writeObject(ievent);
+			}
+			Files.write(insuranceEventPath, byteos.toByteArray());
+		}
+		catch (IOException ex)
+		{
+			ex.printStackTrace();
+		}
+	}
+
 	public static int taskChoice ()
 	{
 		Scanner s = new Scanner(System.in);
@@ -30,8 +105,9 @@ public class MooseCalendarRunner {
 		System.out.println("2. Edit reminders");
 		System.out.println("3. View Reminders");
 		System.out.println("4. Delete Reminders");
+		System.out.println("5. Exit");
 		userChoice = s.nextInt();
-		while(!(userChoice > 0 && userChoice < 5))
+		while(!(userChoice > 0 && userChoice < 6))
 		{
 			try {
 				System.out.println("Please enter one of the choices above.");
@@ -51,73 +127,88 @@ public class MooseCalendarRunner {
 		// First, ask the user for the insurance event information, store it in
 		// memory, then make sure there are no duplicates in the file. If there
 		// aren't any, then the event should be appended.
-		InsuranceEvent temp = new InsuranceEvent(new Date(), "temp", "temp", 0.0, 0.0);
+		InsuranceEvent temp = new InsuranceEvent();
 		Scanner s = new Scanner(System.in);
 		String dateString;
-		SimpleDateFormat df = new SimpleDateFormat();
-
+		String tempString;
+		DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
 		System.out.println("Please enter the following:");
 		System.out.println("Address of the insured property:");
-		temp.setEventName(s.nextLine());
+		System.out.print("Number, street, & apt./suite/etc. (no commas): ");
+		tempString = s.nextLine();
+		System.out.print("City: ");
+		tempString = tempString + " " + s.nextLine();
+		System.out.print("State (two letters only): ");
+		tempString = tempString + " " + s.nextLine().toUpperCase();
+		System.out.print("Zip code: ");
+		tempString = tempString + " " + s.nextLine();
+		temp.setEventName(tempString);
 		System.out.println("Name of the insurance carrier:");
 		temp.setInsuranceCarrier(s.nextLine());
+		// For the next two variables, we use nextLine so that we gobble up
+		// the newline character. The resulting string then gets parsed and
+		// the returned double gets set into temp.
 		System.out.println("Premium:");
-		temp.setPremium(s.nextDouble());
+		temp.setPremium(Double.parseDouble(s.nextLine()));
 		System.out.println("Level of coverage:");
-		temp.setLevelOfCoverage(s.nextDouble());
-		System.out.println("Date payment is due (YYYY-MM-DD format):");
+		temp.setLevelOfCoverage(Double.parseDouble(s.nextLine())); 
+		System.out.println("Date payment is due (MM/DD/YY format):");
 		dateString = s.nextLine();
-		try 
+		temp.setEventDate(df.parse(dateString, new ParsePosition(0)));
+		
+		// Now that we have all the information recorded for the event, we
+		// save it by loading the list from disk into memory, adding the
+		// event, then writing the new array to disk.
+		ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
+		insuranceEventList.add(temp);
+		saveEvents(insuranceEventList);
+	}
+	
+	public static void viewInsuranceEvents()
+	{
+		ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
+		InsuranceEvent currentEvent = null;
+		
+		for (int i = 0; i < insuranceEventList.size(); i++)
 		{
-			temp.setEventDate(df.parse(dateString));
-		}
-		catch (ParseException ex)
-		{
-			
+			currentEvent = insuranceEventList.get(i);
+			// Note that the bill number is one more than the index.
+			System.out.println("Bill " + (i + 1) + " :");
+			System.out.println(currentEvent.toString());
 		}
 	}
+	
+	public static void removeInsuranceEvent()
+	{
+		Scanner keyScanner = new Scanner(System.in);
+		int index = -1;
+		
+		viewInsuranceEvents();
+		
+		System.out.println("Please enter the number of the record you would like to erase, or enter 0 to exit.");
+		String line = keyScanner.nextLine();
+		index = Integer.parseInt(line) - 1;
+		try
+		{
+			ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
+			insuranceEventList.remove(index);
+			saveEvents(insuranceEventList);
+		}
+		catch (IndexOutOfBoundsException ex)
+		{
+			System.out.println("No items removed.");
+		}
+	}
+
+
 	public static void main(String[] args)
 			throws InterruptedException {
 		
-		Path file = Paths.get("FirstInsurance.ser");
 		int choice = 0;
-		InsuranceEvent testInsurance1 
-		= new InsuranceEvent(new Date(), "Property1", "ABC", 10000.0, 100.0);
-		InsuranceEvent testInsurance2 
-		= new InsuranceEvent(new Date(), "Property2", "DEF", 10000.0, 100.0);
-		InsuranceEvent testInsurance3 
-		= new InsuranceEvent(new Date(), "Property3", "GHI", 10000.0, 100.0);
-		
-		
-		try (ObjectOutputStream out = new ObjectOutputStream(Files.newOutputStream(file))) {
-			out.writeObject(testInsurance1);
-			out.writeObject(testInsurance2);
-			out.writeObject(testInsurance3);
-			out.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
-		InsuranceEvent outInsurance = null;
-		try (ObjectInputStream in = new ObjectInputStream(Files.newInputStream(file))) {
-			for(int i = 0; i < 3; i++) {
-				try {
-					outInsurance = (InsuranceEvent) in.readObject();
-					System.out.println(outInsurance.toString());
-				}
-				catch (ClassNotFoundException e) {
-					e.printStackTrace();
-				}
-			}
-			in.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		
 		System.out.println("Moose Calendar by TwoGuysInAShed Productions");
 
-		while (choice != -1)
+		while (choice != 5)
 		{
 			choice = taskChoice();
 			switch (choice)
@@ -125,6 +216,12 @@ public class MooseCalendarRunner {
 			case 1 :
 				addInsuranceEvent();
 				break;
+			case 3 :
+				viewInsuranceEvents();
+				break;
+			case 4 :
+				removeInsuranceEvent();
+			case 5 :
 			default :
 			}
 		}
@@ -136,10 +233,18 @@ public class MooseCalendarRunner {
 		// command that opens a new console window and it itself can
 		// receive a command or program along with its arguments as an
 		// argument, and in this case, it's java RemindersRunner.
-		ProcessBuilder runSomeCode = new ProcessBuilder("cmd.exe", "/C", "start", "java", "RemindersRunner" );
+		String[] command = { "cmd.exe", "/C", "start", "java", "RemindersRunner" };
+		ProcessBuilder runSomeCode = new ProcessBuilder(command);
 		
-		runSomeCode.directory(new File("C:\\Users\\Hiram\\workspace\\Moose-Project\\bin"));
+		runSomeCode.directory(new File("C:\\Users\\Glew\\workspace\\Moose-Project\\bin"));
 		
-		try { runSomeCode.start(); } catch (IOException ex) { ex.printStackTrace(); System.out.print("here");}
+		try
+		{
+			runSomeCode.start();
+		}
+		catch (IOException ex)
+		{
+			ex.printStackTrace(); 
+		}
 	}
 }
