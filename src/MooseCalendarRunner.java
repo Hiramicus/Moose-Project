@@ -105,9 +105,10 @@ public class MooseCalendarRunner {
 		System.out.println("2. Edit reminders");
 		System.out.println("3. View Reminders");
 		System.out.println("4. Delete Reminders");
-		System.out.println("5. Exit");
+		System.out.println("5. Make a payment");
+		System.out.println("6. Exit");
 		userChoice = s.nextInt();
-		while(!(userChoice > 0 && userChoice < 6))
+		while(!(userChoice > 0 && userChoice < 7))
 		{
 			try {
 				System.out.println("Please enter one of the choices above.");
@@ -176,17 +177,21 @@ public class MooseCalendarRunner {
 			System.out.println("Bill " + (i + 1) + " :");
 			System.out.println(currentEvent.toString());
 		}
+		if (insuranceEventList.size() == 0)
+		{
+			System.out.println("No records to display.");
+		}
 	}
 	
 	public static void removeInsuranceEvent()
 	{
-		Scanner keyScanner = new Scanner(System.in);
+		Scanner scanner = new Scanner(System.in);
 		int index = -1;
 		
 		viewInsuranceEvents();
 		
 		System.out.println("Please enter the number of the record you would like to erase, or enter 0 to exit.");
-		String line = keyScanner.nextLine();
+		String line = scanner.nextLine();
 		index = Integer.parseInt(line) - 1;
 		try
 		{
@@ -200,6 +205,27 @@ public class MooseCalendarRunner {
 		}
 	}
 
+	public static void makePayment()
+	{
+		Scanner scanner = new Scanner(System.in);
+		int index = -1;
+		
+		viewInsuranceEvents();
+		
+		System.out.println("Please enter the number of the bill that you paid, or enter 0 to exit.");
+		String line = scanner.nextLine();
+		index = Integer.parseInt(line) - 1;
+		try
+		{
+			ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
+			insuranceEventList.get(index).pay();
+			saveEvents(insuranceEventList);
+		}
+		catch (IndexOutOfBoundsException ex)
+		{
+			System.out.println("No bills marked as paid.");
+		}
+	}
 
 	public static void main(String[] args)
 			throws InterruptedException {
@@ -208,7 +234,7 @@ public class MooseCalendarRunner {
 
 		System.out.println("Moose Calendar by TwoGuysInAShed Productions");
 
-		while (choice != 5)
+		while (choice != 6)
 		{
 			choice = taskChoice();
 			switch (choice)
@@ -222,6 +248,8 @@ public class MooseCalendarRunner {
 			case 4 :
 				removeInsuranceEvent();
 			case 5 :
+				makePayment();
+			case 6 :
 			default :
 			}
 		}

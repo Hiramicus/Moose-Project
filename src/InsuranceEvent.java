@@ -1,4 +1,5 @@
 import java.util.Date;
+import java.util.Calendar;
 import java.io.Serializable;
 
 public class InsuranceEvent implements Serializable
@@ -8,12 +9,9 @@ public class InsuranceEvent implements Serializable
 	private String insuranceCarrier;
 	private double levelOfCoverage;
 	private double premium;
-	private boolean eventHandled;
-	private int delays;
 	// ONEMONTH, etc., mean 'due in less than one month but more than two weeks', etc.
-	public enum PaymentStatus { NOTDUESOON, ONEMONTH, TWOWEEKS, ONEWEEK, OVERDUE }
-	PaymentStatus currentPaymentStatus;
-	PaymentStatus lastReminderStatus; // The status when the last reminder was acknowledged.
+	public enum Urgency { NOTDUESOON, ONEMONTH, TWOWEEKS, ONEWEEK, OVERDUE }
+	Urgency lastUrgency; // The status when the last reminder was acknowledged.
 	
 	public InsuranceEvent()
 	{
@@ -22,10 +20,7 @@ public class InsuranceEvent implements Serializable
 		insuranceCarrier = "";
 		levelOfCoverage = 0.0;
 		premium = 0.0;
-		eventHandled = false;
-		delays = 0;
-		currentPaymentStatus = PaymentStatus.NOTDUESOON;
-		lastReminderStatus = PaymentStatus.NOTDUESOON;
+		lastUrgency = Urgency.NOTDUESOON;
 	}
 
 	public InsuranceEvent(Date eventDate, String eventName, String insuranceCarrier, double levelOfCoverage, double premium)
@@ -35,8 +30,7 @@ public class InsuranceEvent implements Serializable
 		this.insuranceCarrier = insuranceCarrier;
 		this.levelOfCoverage = levelOfCoverage;
 		this.premium = premium;
-		this.eventHandled = false;
-		this.delays = 0;
+		lastUrgency = Urgency.NOTDUESOON;
 	}
 
 	public Date getEventDate()
@@ -88,48 +82,87 @@ public class InsuranceEvent implements Serializable
 	{
 		this.premium = premium;
 	}
+	
+	public Urgency getLastUrgency ()
+	{
+		return lastUrgency;
+	}
+	
+	public void setLastUrgency (Urgency lastUrgency)
+	{
+		this.lastUrgency = lastUrgency;
+	}
 
-	public boolean isEventHandled()
+	public Urgency getUrgency()
 	{
-		return eventHandled;
-	}
+		// This method computes the urgency by checking whether adding a
+		// certain number of days to today's date brings it past the due
+		// date.
+		
+		// nowCalendar always holds today's date.
+		Calendar nowCalendar = Calendar.getInstance();
+		// shiftingCalendar holds today's date plus an offset.
+		Calendar shiftingCalendar = Calendar.getInstance();
+		// dueCalendar is simply the event's due date.
+		Calendar dueCalendar = Calendar.getInstance();
+		// currentUrgency holds the return value, defaulting to NOTDUESOON.
+		Urgency currentUrgency = Urgency.NOTDUESOON;
+		
+		dueCalendar.setTime(getEventDate());
 
-	public void setEventHandled(boolean eventHandled)
-	{
-		this.eventHandled = eventHandled;
+		// What follows is a series of tests. Each time, a certain amount
+		// of time is added to today's date, and if that time is past the
+		// due date, the appropriate urgency level is set. The tests are
+		// organized from being due in a month to being overdue. This makes
+		// it so that more restrictive urgency levels can simply override
+		// the more inclusive ones.
+		// If all tests fail, NOTDUESOON is returned.
+		shiftingCalendar.setTime(nowCalendar.getTime());
+		shiftingCalendar.add(Calendar.DAY_OF_MONTH, 30);
+		if (shiftingCalendar.after(dueCalendar))
+		{
+			currentUrgency = Urgency.ONEMONTH;
+		}
+
+		shiftingCalendar.setTime(nowCalendar.getTime());
+		shiftingCalendar.add(Calendar.DAY_OF_MONTH, 14);
+		if (shiftingCalendar.after(dueCalendar))
+		{
+			currentUrgency = Urgency.TWOWEEKS;
+		}
+
+		shiftingCalendar.setTime(nowCalendar.getTime());
+		shiftingCalendar.add(Calendar.DAY_OF_MONTH, 7);
+		if (shiftingCalendar.after(dueCalendar))
+		{
+			currentUrgency = Urgency.ONEWEEK;
+		}
+
+		shiftingCalendar.setTime(nowCalendar.getTime());
+		if (shiftingCalendar.after(dueCalendar))
+		{
+			currentUrgency = Urgency.OVERDUE;
+		}
+
+		return currentUrgency;
 	}
 	
-	public int getDelays()
+	public void pay()
 	{
-		return delays;
-	}
-	
-	private void setDelays(int newDelay)
-	{
-		this.delays = newDelay;
-	}
-	
-	public void delayPayment()
-	{
-		delays++;
-	}
-	
-	public void resetDelays()
-	{
-		delays = 0;
-	}
-	
-	public boolean reminderWorthy()
-	{
-		return true;
+		Calendar eventCalendar = Calendar.getInstance();
+		
+		eventCalendar.setTime(getEventDate());
+		eventCalendar.add(Calendar.YEAR, 1);
+		setEventDate(eventCalendar.getTime());
+		setLastUrgency(Urgency.NOTDUESOON);
 	}
 	
 	public String toString()
 	{
 		return String.format("%-35s %-40s %-20s %-20s %-12s\n"
-				+ "%-35s %-40s %-20s $%-,20.2f $%-,12.2f\n", 
+				+ "%-35s %-40s %-20s $%-,20.2f $%-,12.2f %-12s\n", 
 				"Date", "Event", "Insurance Carrier", "Level of Coverage", "Premium",
-				this.eventDate, this.eventName, this.insuranceCarrier, this.levelOfCoverage, this.premium);
+				this.eventDate, this.eventName, this.insuranceCarrier, this.levelOfCoverage, this.premium, this.getUrgency().name());
 	}
-	
+
 }
