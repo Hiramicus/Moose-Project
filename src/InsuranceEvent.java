@@ -2,6 +2,13 @@ import java.util.Date;
 import java.util.Calendar;
 import java.io.Serializable;
 
+// This class includes the logic for whether the user should be reminded of
+// this event. The rationale is that this logic depends only on information
+// contained in the event objects; however, there is an excellent case for
+// having a reminder policy class that makes all these decisions. This
+// could be a singleton that sets the policy for the entire program or each
+// object could have a policy field that is checked for whether a reminder
+// should happen or not.
 public class InsuranceEvent implements Serializable
 {
 	private Date eventDate;
@@ -83,12 +90,12 @@ public class InsuranceEvent implements Serializable
 		this.premium = premium;
 	}
 	
-	public Urgency getLastUrgency ()
+	private Urgency getLastUrgency ()
 	{
 		return lastUrgency;
 	}
 	
-	public void setLastUrgency (Urgency lastUrgency)
+	private void setLastUrgency (Urgency lastUrgency)
 	{
 		this.lastUrgency = lastUrgency;
 	}
@@ -120,33 +127,27 @@ public class InsuranceEvent implements Serializable
 		shiftingCalendar.setTime(nowCalendar.getTime());
 		shiftingCalendar.add(Calendar.DAY_OF_MONTH, 30);
 		if (shiftingCalendar.after(dueCalendar))
-		{
 			currentUrgency = Urgency.ONEMONTH;
-		}
 
 		shiftingCalendar.setTime(nowCalendar.getTime());
 		shiftingCalendar.add(Calendar.DAY_OF_MONTH, 14);
 		if (shiftingCalendar.after(dueCalendar))
-		{
 			currentUrgency = Urgency.TWOWEEKS;
-		}
 
 		shiftingCalendar.setTime(nowCalendar.getTime());
 		shiftingCalendar.add(Calendar.DAY_OF_MONTH, 7);
 		if (shiftingCalendar.after(dueCalendar))
-		{
 			currentUrgency = Urgency.ONEWEEK;
-		}
 
 		shiftingCalendar.setTime(nowCalendar.getTime());
 		if (shiftingCalendar.after(dueCalendar))
-		{
 			currentUrgency = Urgency.OVERDUE;
-		}
 
 		return currentUrgency;
 	}
 	
+	// This makes the due date go up by a year. It doesn't take into
+	// account business days.
 	public void pay()
 	{
 		Calendar eventCalendar = Calendar.getInstance();
@@ -155,6 +156,35 @@ public class InsuranceEvent implements Serializable
 		eventCalendar.add(Calendar.YEAR, 1);
 		setEventDate(eventCalendar.getTime());
 		setLastUrgency(Urgency.NOTDUESOON);
+	}
+	
+	// This effectively records that a reminder was given to the user. The
+	// user of the class (the programmer using the class, not end-user)
+	// needs to decide when to call this, and must do so for the program to
+	// make the correct decisions when displaying reminders.
+	public void reminderDisplayed ()
+	{
+		setLastUrgency(getUrgency());
+	}
+	
+	// This is a hardcoded reminder policy. It outputs whether the user
+	// should be reminded of the event.
+	public boolean shouldRemind ()
+	{
+		Urgency currentUrgency = getUrgency();
+		
+		// First we test if it's due in a week or overdue. We return true
+		// for either of these cases.
+		if (currentUrgency.compareTo(Urgency.TWOWEEKS) > 0)
+			return true;
+		
+		// Then we check whether it's due soon at all, and if it is, we
+		// check if its urgency has increased since the last reminder was
+		// effected.
+		if (currentUrgency.compareTo(Urgency.NOTDUESOON) > 0 &&
+				currentUrgency.compareTo(getLastUrgency()) > 0)
+			return true;
+		else return false;
 	}
 	
 	public String toString()

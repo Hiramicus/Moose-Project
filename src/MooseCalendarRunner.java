@@ -83,9 +83,7 @@ public class MooseCalendarRunner {
 		{
 			out = new ObjectOutputStream(byteos);
 			for (InsuranceEvent ievent : insuranceEventList)
-			{
 				out.writeObject(ievent);
-			}
 			Files.write(insuranceEventPath, byteos.toByteArray());
 		}
 		catch (IOException ex)
@@ -93,41 +91,13 @@ public class MooseCalendarRunner {
 			ex.printStackTrace();
 		}
 	}
-
-	public static int taskChoice ()
-	{
-		Scanner s = new Scanner(System.in);
-		int userChoice = 0;
-		
-		System.out.println("Type the number of the option you want and press " +
-				"Enter.");
-		System.out.println("1. Add reminders");
-		System.out.println("2. Edit reminders");
-		System.out.println("3. View Reminders");
-		System.out.println("4. Delete Reminders");
-		System.out.println("5. Make a payment");
-		System.out.println("6. Exit");
-		userChoice = s.nextInt();
-		while(!(userChoice > 0 && userChoice < 7))
-		{
-			try {
-				System.out.println("Please enter one of the choices above.");
-				userChoice = s.nextInt();
-			} catch (InputMismatchException ex)
-			{
-				s.nextLine();
-				System.out.println("Please type only digits.");
-			}
-		}
-		
-		return userChoice;
-	}
 	
-	public static void addInsuranceEvent ()
+	public static void addInsuranceEvent (InsuranceEvent newEvent)
 	{
 		// First, ask the user for the insurance event information, store it in
 		// memory, then make sure there are no duplicates in the file. If there
 		// aren't any, then the event should be appended.
+		/*
 		InsuranceEvent temp = new InsuranceEvent();
 		Scanner s = new Scanner(System.in);
 		String dateString;
@@ -156,12 +126,14 @@ public class MooseCalendarRunner {
 		System.out.println("Date payment is due (MM/DD/YY format):");
 		dateString = s.nextLine();
 		temp.setEventDate(df.parse(dateString, new ParsePosition(0)));
+		*/
+
 		
 		// Now that we have all the information recorded for the event, we
 		// save it by loading the list from disk into memory, adding the
 		// event, then writing the new array to disk.
 		ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
-		insuranceEventList.add(temp);
+		insuranceEventList.add(newEvent);
 		saveEvents(insuranceEventList);
 	}
 	
@@ -178,9 +150,7 @@ public class MooseCalendarRunner {
 			System.out.println(currentEvent.toString());
 		}
 		if (insuranceEventList.size() == 0)
-		{
 			System.out.println("No records to display.");
-		}
 	}
 	
 	public static void removeInsuranceEvent()
@@ -226,30 +196,49 @@ public class MooseCalendarRunner {
 			System.out.println("No bills marked as paid.");
 		}
 	}
+	
+	public static boolean anythingDueSoon ()
+	{
+		ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
+		
+		for(InsuranceEvent event : insuranceEventList)
+			if (event.shouldRemind())
+				return true;
+
+		return false;
+	}
 
 	public static void main(String[] args)
-			throws InterruptedException {
+			throws InterruptedException
+	{
 		
 		int choice = 0;
+		Tui tui = new Tui();
 
 		System.out.println("Moose Calendar by TwoGuysInAShed Productions");
+		
+		if (anythingDueSoon())
+			System.out.println("Something due");
 
-		while (choice != 6)
+		while (choice != 7)
 		{
-			choice = taskChoice();
+			choice = tui.taskChoice();
 			switch (choice)
 			{
 			case 1 :
-				addInsuranceEvent();
+				addInsuranceEvent(tui.addInsuranceEventUI());
 				break;
 			case 3 :
 				viewInsuranceEvents();
 				break;
 			case 4 :
 				removeInsuranceEvent();
+				break;
 			case 5 :
 				makePayment();
+				break;
 			case 6 :
+			case 7 :
 			default :
 			}
 		}
