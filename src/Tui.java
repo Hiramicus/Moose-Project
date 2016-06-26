@@ -49,8 +49,8 @@ public class Tui {
 		DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
 
 		System.out.println("Please enter the following:");
-		System.out.println("Address of the insured property:");
-		System.out.print("Number, street, & apt./suite/etc. (no commas): ");
+		System.out.println("Company name or address of the insured property:");
+		System.out.print("Company name/Number, street, & apt./suite/etc. (no commas): ");
 		tempString = s.nextLine();
 
 		System.out.print("City: ");
