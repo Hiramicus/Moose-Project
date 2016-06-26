@@ -1,6 +1,8 @@
 import java.util.Date;
+import java.util.Locale;
 import java.util.Calendar;
 import java.io.Serializable;
+import java.text.SimpleDateFormat;
 
 // This class includes the logic for whether the user should be reminded of
 // this event. The rationale is that this logic depends only on information
@@ -190,8 +192,11 @@ public class InsuranceEvent implements Serializable
 	
 	public String toString()
 	{
-		return String.format("%-35s %-40s %-20s $%-,20.2f $%-,12.2f %-12s\n", 
-				this.eventDate, this.eventName, this.insuranceCarrier,
+		SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd yyyy", Locale.US);		
+		String dateString1 = formatter.format((this.eventDate));
+		
+		return String.format("%-18s %-50s %-20s $%-,20.2f $%-,12.2f %-12s\n", 
+				dateString1, this.eventName, this.insuranceCarrier,
 				this.levelOfCoverage, this.premium, this.getUrgency().name());
 	}
 
