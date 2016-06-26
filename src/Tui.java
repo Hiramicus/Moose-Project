@@ -26,7 +26,7 @@ public class Tui {
 		System.out.println("7. Exit");
 		
 		userChoice = s.nextInt();
-		while(!(userChoice > 0 && userChoice < 7))
+		while(!(userChoice > 0 && userChoice < 8))
 		{
 			try {
 				System.out.println("Please enter one of the choices above.");

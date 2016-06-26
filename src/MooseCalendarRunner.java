@@ -247,7 +247,7 @@ public class MooseCalendarRunner {
 			}
 		}
 		
-		while (choice != 6)
+		while (choice != 7)
 		{
 			choice = tui.taskChoice();
 			switch (choice)
