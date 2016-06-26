@@ -147,11 +147,14 @@ public class MooseCalendarRunner {
 		}
 	}
 	
+<<<<<<< HEAD
 	private static void resortList(ListOnDisk<InsuranceEvent> ieList, Tui tui)
 	{
 
 	}
 	
+=======
+>>>>>>> origin
 	private static ArrayList<Integer> eventsDueSoon (ListOnDisk<InsuranceEvent> ieList)
 	{
 		ArrayList<Integer> indices = new ArrayList<Integer>();
@@ -215,7 +218,7 @@ public class MooseCalendarRunner {
 			}
 		}
 		
-		while (choice != 7)
+		while (choice != 6)
 		{
 			choice = tui.taskChoice();
 			switch (choice)
@@ -233,9 +236,12 @@ public class MooseCalendarRunner {
 				recordPayment(ieList, tui);
 				break;
 			case 6 :
+<<<<<<< HEAD
 				resortList(ieList, tui);
 				break;
 			case 7 :
+=======
+>>>>>>> origin
 			default :
 			}
 		}
