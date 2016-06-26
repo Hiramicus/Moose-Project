@@ -12,14 +12,14 @@ import java.io.IOException;
 public class RemindersRunner
 {
 	// This is just a path made up of the filename.
-	public static final Path logFileRPath = Paths.get("LastReminderCheck.log");
+	public static final Path logFileRelPath = Paths.get("LastReminderCheck.log");
 	
 	// This gives us an absolute path to the file. It depends on
 	// MooseCalendarRunner's getAppDataFPath() method.
 	public static Path getLogFileFPath()
 	{
-		Path appDataFPath = MooseCalendarRunner.getAppDataFPath();
-		return appDataFPath.resolve(logFileRPath);
+		Path appDataDirAbsPath = MooseCalendarRunner.getAppDataDirAbsPath();
+		return appDataDirAbsPath.resolve(logFileRelPath);
 	}
 	
 	// The write method does not have to check for existence of the file.
@@ -119,7 +119,7 @@ public class RemindersRunner
 	{
 		Path ieFileFPath = MooseCalendarRunner.getIEFileFPath();
 		ListOnDisk<InsuranceEvent> ieList;
-		ieList = new ListOnDisk<InsuranceEvent>(ieFileFPath);
+		ieList = new ListOnDisk<InsuranceEvent>(ieFileFPath, new IEDueDateComparator());
 
 		for(int i = 0; i < ieList.size(); i++)
 			if (ieList.get(i).shouldRemind())

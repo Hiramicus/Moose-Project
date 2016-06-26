@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.nio.file.Path;
 import java.nio.file.Files;
 import java.io.ByteArrayInputStream;
@@ -7,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
 import java.io.IOException;
 import java.io.EOFException;
+import java.util.Comparator;
 
 // This class is a wrapper to an ArrayList that simply saves its
 // contents to the disk after every change in state.
@@ -18,10 +20,12 @@ public class ListOnDisk<T> {
 	// Because we load from disk and save to disk after every change, we
 	// only need the file name as permanent data in memory.
 	private Path dataFile;
+	private Comparator<T> c;
 	
-	public ListOnDisk(Path file)
+	public ListOnDisk(Path file, Comparator<T> c)
 	{
 		this.dataFile = file;
+		this.c = c;
 	}
 
 	// This method loads the contents of the file into memory.
@@ -95,6 +99,7 @@ public class ListOnDisk<T> {
 	// Note that this method completely overwrites the file.
 	public void saveItems (ArrayList<T> list)
 	{
+		Collections.sort(list, c);
 		ByteArrayOutputStream byteos = new ByteArrayOutputStream();
 		ObjectOutputStream out = null;
 		try
