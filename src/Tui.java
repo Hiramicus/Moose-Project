@@ -22,7 +22,7 @@ public class Tui {
 		System.out.println("3. View bills");
 		System.out.println("4. Delete bills");
 		System.out.println("5. Check off bills as paid");
-		System.out.println("6. View reminders");
+		System.out.println("6. Resort List");
 		System.out.println("7. Exit");
 		userChoice = s.nextInt();
 		while(!(userChoice > 0 && userChoice < 8))
