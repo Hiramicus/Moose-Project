@@ -152,23 +152,9 @@ public class RemindersRunner
 		}
 	
 	}
+
 	public static void main(String[] args)
 	{
-		// Check time. If before 9:30 AM, calculate duration between now and
-		// and 9:30 AM and sleep until then. If after 9:30 AM, sleep for 30
-		// minutes.
-		// After waking up, check if 20 hours have passed between now and
-		// the last time this program has run. If that's the case, run
-		// anyReminders(), and if it returns true, launch MooseCalendar
-		// with option r.
-		// Regardless of whether it ran or not, sleep until 9:30 AM of the
-		// next day.
-		
-		// Check if I should be awake. If I should, run reminders and
-		// record that they were run. If I shouldn't calculate next wake
-		// up time, and sleep for that duration. Go back to beginning of
-		// loop.
-		
 		if (Files.notExists(getLogFileFPath()))
 		{
 			try
@@ -189,10 +175,7 @@ public class RemindersRunner
 			{
 				Thread.sleep(getSleepDuration(nextTimeToRun));
 			}
-			catch (InterruptedException iex)
-			{
-				iex.printStackTrace();
-			}
+			catch (InterruptedException iex) { }
 			if (Calendar.getInstance().compareTo(nextTimeToRun) > 0)
 			{
 				setLastTimeRun();

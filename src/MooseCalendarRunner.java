@@ -292,6 +292,7 @@ public class MooseCalendarRunner {
 				resortList(ieList, tui);
 				break;
 			case 7 :
+				backup(ieList);
 			default :
 			}
 		}
