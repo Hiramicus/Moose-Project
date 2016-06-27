@@ -97,6 +97,23 @@ public class MooseCalendarRunner {
 		ieList.add(tui.addInsuranceEventUI());
 	}
 	
+	private static void editInsuranceEvent (ListOnDisk<InsuranceEvent> ieList, Tui tui)
+	{
+		int index = -1;
+		int field = -1;
+		
+		index = tui.getIndex(ieList, "edit");
+		field = tui.getField();
+		try
+		{
+			tui.setInsuranceEventUI(field, index, ieList);
+		}
+		catch (IndexOutOfBoundsException ex)
+		{
+			tui.noActionTaken();
+		}
+	}
+	
 	private static void viewInsuranceEvents(ListOnDisk<InsuranceEvent> ieList, Tui tui)
 	{
 		tui.displayInsuranceEvents(ieList);
@@ -260,6 +277,8 @@ public class MooseCalendarRunner {
 			case 1 :
 				addInsuranceEvent(ieList, tui);
 				break;
+			case 2 :
+				editInsuranceEvent(ieList, tui);
 			case 3 :
 				viewInsuranceEvents(ieList, tui);
 				break;
