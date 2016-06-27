@@ -220,15 +220,14 @@ public class Tui {
 	
 	public int getField()
 	{
-		Scanner scanner = new Scanner(System.in);
-		int field = -1;
+		int field = 0;
 
 		System.out.println("Please enter which field you would like to edit: ");
-		System.out.println("1. Date\n" + "2. Company/Address\n" + "3. Insurance Provider\n" 
-		+ "4. Level of Coverage\n" + "5. Premium");
+		System.out.println("1. Date\n" + "2. Company/Address\n" +
+				"3. Insurance Provider\n" + "4. Level of Coverage\n" +
+				"5. Premium");
 		System.out.println(", or enter 0 to exit.");
-		String line = scanner.nextLine();
-		field = Integer.parseInt(line);
+		field = forceIntRangeInput(0, 5);
 		
 		return field;
 	}
@@ -237,17 +236,15 @@ public class Tui {
 	{
 		InsuranceEvent tempEvent = ieList.get(index);
 		Scanner s = new Scanner(System.in);
-		String dateString;
 		String tempString;
-		DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
 		
 		System.out.println("Please enter the following:");
 		
 		if (field == 1)
 		{
 			System.out.println("Date payment is due (MM/DD/YY format):");
-			dateString = s.nextLine();
-			tempEvent.setEventDate(df.parse(dateString, new ParsePosition(0)));
+			Date tempDate = forceDateInput();
+			tempEvent.setEventDate(tempDate);
 			ieList.set(index, tempEvent);
 		}
 		else if (field == 2)
@@ -277,13 +274,15 @@ public class Tui {
 		else if (field == 4)
 		{
 			System.out.println("Level of coverage:");
-			tempEvent.setLevelOfCoverage(Double.parseDouble(s.nextLine()));
+			double tempLevelOfCoverage = forceDoubleInput();
+			tempEvent.setLevelOfCoverage(tempLevelOfCoverage);
 			ieList.set(index, tempEvent);
 		}
-		else //if (field == 5)
+		else 
 		{
 			System.out.println("Premium:");
-			tempEvent.setPremium(Double.parseDouble(s.nextLine()));
+			double tempPremium = forceDoubleInput();
+			tempEvent.setPremium(tempPremium);
 			ieList.set(index, tempEvent);
 		}
 

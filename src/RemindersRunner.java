@@ -140,7 +140,7 @@ public class RemindersRunner
 		String[] command = { "cmd.exe", "/C", "start", "java", "MooseCalendarRunner", "r" };
 		ProcessBuilder runSomeCode = new ProcessBuilder(command);
 	
-		runSomeCode.directory(new File("C:\\Users\\Glew\\workspace\\Moose-Project\\bin"));
+		runSomeCode.directory(new File("C:\\Program Files\\TwoGuysInAShed\\MooseCalendar"));
 	
 		try
 		{
