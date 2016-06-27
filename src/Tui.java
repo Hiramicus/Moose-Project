@@ -129,6 +129,77 @@ public class Tui {
 		return index;
 	}
 	
+	public int getField()
+	{
+		Scanner scanner = new Scanner(System.in);
+		int field = -1;
+
+		System.out.println("Please enter which field you would like to edit: ");
+		System.out.println("1. Date\n" + "2. Company/Address\n" + "3. Insurance Provider\n" 
+		+ "4. Level of Coverage\n" + "5. Premium");
+		System.out.println(", or enter 0 to exit.");
+		String line = scanner.nextLine();
+		field = Integer.parseInt(line);
+		
+		return field;
+	}
+	
+	public void setInsuranceEventUI(int field, int index, ListOnDisk<InsuranceEvent> ieList)
+	{
+		InsuranceEvent tempEvent = ieList.get(index);
+		Scanner s = new Scanner(System.in);
+		String dateString;
+		String tempString;
+		DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
+		
+		System.out.println("Please enter the following:");
+		
+		if (field == 1)
+		{
+			System.out.println("Date payment is due (MM/DD/YY format):");
+			dateString = s.nextLine();
+			tempEvent.setEventDate(df.parse(dateString, new ParsePosition(0)));
+			ieList.set(index, tempEvent);
+		}
+		else if (field == 2)
+		{
+			System.out.println("Company name or address of the insured property:");
+			System.out.print("Company name/Number, street, & apt./suite/etc. (no commas): ");
+			tempString = s.nextLine();
+
+			System.out.print("City: ");
+			tempString = tempString + " " + s.nextLine();
+
+			System.out.print("State (two letters only): ");
+			tempString = tempString + " " + s.nextLine().toUpperCase();
+
+			System.out.print("Zip code: ");
+			tempString = tempString + " " + s.nextLine();
+
+			tempEvent.setEventName(tempString);
+			ieList.set(index, tempEvent);
+		}
+		else if (field == 3)
+		{
+			System.out.println("Name of the insurance carrier:");
+			tempEvent.setInsuranceCarrier(s.nextLine());
+			ieList.set(index, tempEvent);
+		}
+		else if (field == 4)
+		{
+			System.out.println("Level of coverage:");
+			tempEvent.setLevelOfCoverage(Double.parseDouble(s.nextLine()));
+			ieList.set(index, tempEvent);
+		}
+		else //if (field == 5)
+		{
+			System.out.println("Premium:");
+			tempEvent.setPremium(Double.parseDouble(s.nextLine()));
+			ieList.set(index, tempEvent);
+		}
+
+	}
+	
 	public void noActionTaken()
 	{
 		System.out.println("No action taken.");
