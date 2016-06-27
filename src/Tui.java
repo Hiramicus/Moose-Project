@@ -1,19 +1,99 @@
 import java.util.Scanner;
-import java.util.InputMismatchException;
+import java.util.Date;
 import java.text.DateFormat;
-import java.text.ParsePosition;
 import java.util.ArrayList;
+import java.text.ParseException;
 
 public class Tui {
-
+	
 	public void introduction()
 	{
 		System.out.println("Moose Calendar by TwoGuysInAShed Productions");
 	}
+	
+	public Date forceDateInput()
+	{
+		Scanner scanner = new Scanner(System.in);
+		String line;
+		boolean goodInput = false;
+		Date result = new Date();
+		String message = "Please enter a date in the correct format.";
+		DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
+		
+		while (!goodInput)
+		{
+			try
+			{
+				line = scanner.nextLine();
+				result = df.parse(line);
+				goodInput = true;
+			}
+			catch (ParseException pex)
+			{
+				System.out.println(message);
+			}
+		}
+		
+		return result;
+	}
+
+	public int forceIntRangeInput(int a, int b)
+	{
+		Scanner scanner = new Scanner(System.in);
+		String line;
+		boolean goodInput = false;
+		int result = 0;
+		String please = "Please enter a number between ";
+		String message = please + a + " and " + b + ".";
+		
+		while (!goodInput)
+		{
+			try
+			{
+				line = scanner.nextLine();
+				result = Integer.parseInt(line);
+				if (result >= a && result <= b)
+					goodInput = true;
+				else
+					System.out.println(message);
+			}
+			catch (NumberFormatException nfex)
+			{
+				System.out.println(message);
+			}
+		}
+		
+		return result;
+	}
+
+	public double forceDoubleInput()
+	{
+		Scanner scanner = new Scanner(System.in);
+		String line;
+		boolean goodInput = false;
+		double result = 0;
+		String message = "Please enter a number (no commas).";
+		
+		while (!goodInput)
+		{
+			try
+			{
+				line = scanner.nextLine();
+				result = Double.parseDouble(line);
+				goodInput = true;
+			}
+			catch (NumberFormatException nfex)
+			{
+				System.out.println(message);
+			}
+		}
+		
+		return result;
+	}
 
 	public int taskChoice()
 	{
-		Scanner s = new Scanner(System.in);
+		Scanner scanner = new Scanner(System.in);
 		int userChoice = 0;
 		
 		System.out.println("Type the number of the option you want and press " +
@@ -26,18 +106,7 @@ public class Tui {
 		System.out.println("6. Resort list");
 		System.out.println("7. Exit");
 		
-		userChoice = s.nextInt();
-		while(!(userChoice > 0 && userChoice < 8))
-		{
-			try {
-				System.out.println("Please enter one of the choices above.");
-				userChoice = s.nextInt();
-			} catch (InputMismatchException ex)
-			{
-				s.nextLine();
-				System.out.println("Please type only digits.");
-			}
-		}
+		userChoice = forceIntRangeInput(1, 7);
 		
 		return userChoice;
 	}
@@ -73,15 +142,19 @@ public class Tui {
 		// the newline character. The resulting string then gets parsed and
 		// the returned double gets set into tempEvent.
 		System.out.println("Premium:");
-		tempEvent.setPremium(Double.parseDouble(s.nextLine()));
+		double tempPremium = forceDoubleInput();
+		tempEvent.setPremium(tempPremium);
 		
 		System.out.println("Level of coverage:");
-		tempEvent.setLevelOfCoverage(Double.parseDouble(s.nextLine())); 
+		double tempLevelOfCoverage = forceDoubleInput();
+		tempEvent.setLevelOfCoverage(tempLevelOfCoverage);
 
+		boolean goodFormat = true;
 		System.out.println("Date payment is due (MM/DD/YY format):");
-		dateString = s.nextLine();
-		tempEvent.setEventDate(df.parse(dateString, new ParsePosition(0)));
-		
+		Date tempDate;
+		tempDate = forceDateInput();
+		tempEvent.setEventDate(tempDate);		
+
 		return tempEvent;
 	}
 	
@@ -116,7 +189,6 @@ public class Tui {
 	
 	public int getIndex(ListOnDisk<InsuranceEvent> ieList, String action)
 	{
-		Scanner scanner = new Scanner(System.in);
 		int index = -1;
 
 		displayInsuranceEvents(ieList);
@@ -124,16 +196,15 @@ public class Tui {
 		System.out.print("Please enter the number of the bill that you would like to ");
 		System.out.print(action);
 		System.out.println(", or enter 0 to exit.");
-		String line = scanner.nextLine();
-		index = Integer.parseInt(line) - 1;
 		
-		return index;
+		index = forceIntRangeInput(0, ieList.size());
+		
+		return index - 1;
 	}
 	
 	public int getSortChoice()
 	{
 		Scanner scanner = new Scanner(System.in);
-		
 		int choice = 0;
 
 		System.out.print("Enter the number corresponding to the sort ");
@@ -142,23 +213,7 @@ public class Tui {
 		System.out.print("2. Alphabetically, by company name or ");
 		System.out.println("property address.");
 
-		try
-		{
-			String line = scanner.nextLine();
-			choice = Integer.parseInt(line);
-		}
-		catch (NumberFormatException nfex) { }
-
-		while (choice < 1 || choice > 2)
-		{
-			System.out.println("Please enter one of the choices above.");
-			try
-			{
-				String line = scanner.nextLine();
-				choice = Integer.parseInt(line);
-			}
-			catch (NumberFormatException nfex) { }
-		}
+		choice = forceIntRangeInput(1, 2);
 		
 		return choice;
 	}
