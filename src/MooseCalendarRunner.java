@@ -136,7 +136,12 @@ public class MooseCalendarRunner {
 	
 	private static void resortList(ListOnDisk<InsuranceEvent> ieList, Tui tui)
 	{
+		int choice = tui.getSortChoice();
 
+		if (choice == 1)
+			ieList.sort(new IEDueDateComparator());
+		else
+			ieList.sort(new AlphaComparator());
 	}
 	
 	private static ArrayList<Integer> eventsDueSoon (ListOnDisk<InsuranceEvent> ieList)

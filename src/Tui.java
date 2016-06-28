@@ -10,6 +10,7 @@ public class Tui {
 	{
 		System.out.println("Moose Calendar by TwoGuysInAShed Productions");
 	}
+
 	public int taskChoice()
 	{
 		Scanner s = new Scanner(System.in);
@@ -22,7 +23,7 @@ public class Tui {
 		System.out.println("3. View bills");
 		System.out.println("4. Delete bills");
 		System.out.println("5. Check off bills as paid");
-		System.out.println("6. Resort List");
+		System.out.println("6. Resort list");
 		System.out.println("7. Exit");
 		
 		userChoice = s.nextInt();
@@ -127,6 +128,39 @@ public class Tui {
 		index = Integer.parseInt(line) - 1;
 		
 		return index;
+	}
+	
+	public int getSortChoice()
+	{
+		Scanner scanner = new Scanner(System.in);
+		
+		int choice = 0;
+
+		System.out.print("Enter the number corresponding to the sort ");
+		System.out.println("method you'd like to use.");
+		System.out.println("1. By bill's due date.");
+		System.out.print("2. Alphabetically, by company name or ");
+		System.out.println("property address.");
+
+		try
+		{
+			String line = scanner.nextLine();
+			choice = Integer.parseInt(line);
+		}
+		catch (NumberFormatException nfex) { }
+
+		while (choice < 1 || choice > 2)
+		{
+			System.out.println("Please enter one of the choices above.");
+			try
+			{
+				String line = scanner.nextLine();
+				choice = Integer.parseInt(line);
+			}
+			catch (NumberFormatException nfex) { }
+		}
+		
+		return choice;
 	}
 	
 	public void noActionTaken()
