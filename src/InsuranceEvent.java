@@ -30,7 +30,8 @@ public class InsuranceEvent implements Serializable
 		lastUrgency = Urgency.NOTDUESOON;
 	}
 
-	public InsuranceEvent(Date eventDate, String eventName, String insuranceCarrier, double levelOfCoverage, double premium)
+	public InsuranceEvent(Date eventDate, String eventName,
+			String insuranceCarrier, double levelOfCoverage, double premium)
 	{
 		this.eventDate = eventDate;
 		this.eventName = eventName;
@@ -189,10 +190,9 @@ public class InsuranceEvent implements Serializable
 	
 	public String toString()
 	{
-		return String.format("%-35s %-40s %-20s %-20s %-12s\n"
-				+ "%-35s %-40s %-20s $%-,20.2f $%-,12.2f %-12s\n", 
-				"Date", "Event", "Insurance Carrier", "Level of Coverage", "Premium",
-				this.eventDate, this.eventName, this.insuranceCarrier, this.levelOfCoverage, this.premium, this.getUrgency().name());
+		return String.format("%-35s %-40s %-20s $%-,20.2f $%-,12.2f %-12s\n", 
+				this.eventDate, this.eventName, this.insuranceCarrier,
+				this.levelOfCoverage, this.premium, this.getUrgency().name());
 	}
 
 }

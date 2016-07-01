@@ -1,267 +1,217 @@
 import java.io.IOException;
-import java.io.EOFException;
-import java.io.InputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.text.DateFormat;
-import java.text.ParseException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Scanner;
 import java.util.InputMismatchException;
 import java.util.ArrayList;
-import java.util.Date;
-import java.text.SimpleDateFormat;
-import java.nio.file.StandardOpenOption.*;
-import java.io.ObjectOutputStream;
-import java.io.ObjectInputStream;
 import java.io.File;
-import java.text.ParsePosition;
 
 
 public class MooseCalendarRunner {
 
-	// This is the only file we need. It holds the serialized objects.
-	public static final Path insuranceEventPath = Paths.get("InsuranceEventList.ser");
+	// This path simply holds the name of the file that holds the
+	// insurance event records. If we want to call it something else, we
+	// just change it here.
+	public static final Path ieFileRPath = Paths.get("ieRecords.ser");
 	
-	// This method loads the contents of the file into memory.
-	public static ArrayList<InsuranceEvent> loadEvents ()
+	// This method returns the path to the only folder we use. A method as
+	// opposed to a field is necessary due to the user's home directory
+	// being variable.
+	public static Path getAppDataFPath()
 	{
-		ArrayList<InsuranceEvent> insuranceEventList = new ArrayList<InsuranceEvent>();
-		// Let's try not to open non-existing files.
-		if (Files.exists(insuranceEventPath))
+		Path pathToHome = Paths.get(System.getProperty("user.home"));
+		String pathString = "AppData\\Local\\TwoGuysInAShed\\MooseCalendar";
+		Path fullAppDataPath = pathToHome.resolve(pathString);
+		
+		return fullAppDataPath;
+	}
+	
+	// This method returns the actually useful path to the file. Under
+	// normal circumstances, this should be the only method we actually use
+	// for file operations.
+	public static Path getIEFileFPath()
+	{
+		Path AppDataPath = getAppDataFPath();
+		Path fullIEFilePath = AppDataPath.resolve(ieFileRPath);
+		
+		return fullIEFilePath;
+	}
+	
+	// This returns the directory where our program is installed.
+	public static Path getProgramFilesPath()
+	{
+		String pathString = System.getenv("%programfiles% (x86)");
+		System.out.println(pathString);
+		
+		return Paths.get(pathString);
+	}
+
+	private static void setupAppData()
+	{
+		Path appDataFPath = getAppDataFPath();
+		Path ieFileFPath = getIEFileFPath();
+
+		// Let's check that our folders are what they should be.
+		if (Files.notExists(appDataFPath))
 		{
-			ObjectInputStream in = null;
 			try
 			{
-				// Quite a bit of indirection ahead. First,
-				// Files.readAllBytes takes the file and outputs a raw
-				// byte array. That's just an array, so to actually call
-				// input stream methods, it gets turned into a
-				// ByteArayInputStream, and we use ObjectInputStream to
-				// actually deserialize that data.
-				byte[] allBytes = Files.readAllBytes(insuranceEventPath);
-				ByteArrayInputStream byteis = new ByteArrayInputStream(allBytes);
-				in = new ObjectInputStream(byteis);
+				Files.createDirectories(appDataFPath);
 			}
-			catch (IOException ex)
+			catch (IOException ioex)
 			{
-				ex.printStackTrace();
+				ioex.printStackTrace();
 			}
-
-			// Reading the objects from the byte array.
-			// We will loop through until we get an EOF exception.
-			boolean notEOF = true;
-			while(notEOF)
+		}
+		// And let's create our data file if it doesn't exist yet.
+		if (Files.notExists(ieFileFPath))
+		{
+			try
 			{
-				try
-				{
-					insuranceEventList.add((InsuranceEvent) in.readObject());
-				}
-				catch(EOFException eofex)
-				{
-					notEOF = false;
-				}
-				catch (ClassNotFoundException | IOException ex)
-				{
-					ex.printStackTrace();
-				}
+				Files.createFile(ieFileFPath);
+			}
+			catch (IOException ioex)
+			{
+				ioex.printStackTrace();
 			}
 		}
-		// Note that this can return an empty ArrayList.
-		return insuranceEventList;
 	}
 
-	// This method serializes and saves the insuranceEvent array.
-	// Note that this method completely overwrites the file.
-	public static void saveEvents (ArrayList<InsuranceEvent> insuranceEventList)
+	private static void addInsuranceEvent (ListOnDisk<InsuranceEvent> ieList, Tui tui)
 	{
-		ByteArrayOutputStream byteos = new ByteArrayOutputStream();
-		ObjectOutputStream out = null;
-		try
-		{
-			out = new ObjectOutputStream(byteos);
-			for (InsuranceEvent ievent : insuranceEventList)
-				out.writeObject(ievent);
-			Files.write(insuranceEventPath, byteos.toByteArray());
-		}
-		catch (IOException ex)
-		{
-			ex.printStackTrace();
-		}
+		ieList.add(tui.addInsuranceEventUI());
 	}
 	
-	public static void addInsuranceEvent (InsuranceEvent newEvent)
+	private static void viewInsuranceEvents(ListOnDisk<InsuranceEvent> ieList, Tui tui)
 	{
-		// First, ask the user for the insurance event information, store it in
-		// memory, then make sure there are no duplicates in the file. If there
-		// aren't any, then the event should be appended.
-		/*
-		InsuranceEvent temp = new InsuranceEvent();
-		Scanner s = new Scanner(System.in);
-		String dateString;
-		String tempString;
-		DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
-		System.out.println("Please enter the following:");
-		System.out.println("Address of the insured property:");
-		System.out.print("Number, street, & apt./suite/etc. (no commas): ");
-		tempString = s.nextLine();
-		System.out.print("City: ");
-		tempString = tempString + " " + s.nextLine();
-		System.out.print("State (two letters only): ");
-		tempString = tempString + " " + s.nextLine().toUpperCase();
-		System.out.print("Zip code: ");
-		tempString = tempString + " " + s.nextLine();
-		temp.setEventName(tempString);
-		System.out.println("Name of the insurance carrier:");
-		temp.setInsuranceCarrier(s.nextLine());
-		// For the next two variables, we use nextLine so that we gobble up
-		// the newline character. The resulting string then gets parsed and
-		// the returned double gets set into temp.
-		System.out.println("Premium:");
-		temp.setPremium(Double.parseDouble(s.nextLine()));
-		System.out.println("Level of coverage:");
-		temp.setLevelOfCoverage(Double.parseDouble(s.nextLine())); 
-		System.out.println("Date payment is due (MM/DD/YY format):");
-		dateString = s.nextLine();
-		temp.setEventDate(df.parse(dateString, new ParsePosition(0)));
-		*/
-
-		
-		// Now that we have all the information recorded for the event, we
-		// save it by loading the list from disk into memory, adding the
-		// event, then writing the new array to disk.
-		ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
-		insuranceEventList.add(newEvent);
-		saveEvents(insuranceEventList);
+		tui.displayInsuranceEvents(ieList);
 	}
 	
-	public static void viewInsuranceEvents()
+	private static void removeInsuranceEvent(ListOnDisk<InsuranceEvent> ieList, Tui tui)
 	{
-		ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
-		InsuranceEvent currentEvent = null;
-		
-		for (int i = 0; i < insuranceEventList.size(); i++)
-		{
-			currentEvent = insuranceEventList.get(i);
-			// Note that the bill number is one more than the index.
-			System.out.println("Bill " + (i + 1) + " :");
-			System.out.println(currentEvent.toString());
-		}
-		if (insuranceEventList.size() == 0)
-			System.out.println("No records to display.");
-	}
-	
-	public static void removeInsuranceEvent()
-	{
-		Scanner scanner = new Scanner(System.in);
 		int index = -1;
 		
-		viewInsuranceEvents();
-		
-		System.out.println("Please enter the number of the record you would like to erase, or enter 0 to exit.");
-		String line = scanner.nextLine();
-		index = Integer.parseInt(line) - 1;
+		index = tui.getIndex(ieList, "remove");
 		try
 		{
-			ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
-			insuranceEventList.remove(index);
-			saveEvents(insuranceEventList);
+			ieList.remove(index);
 		}
 		catch (IndexOutOfBoundsException ex)
 		{
-			System.out.println("No items removed.");
+			tui.noActionTaken();
 		}
 	}
 
-	public static void makePayment()
+	private static void recordPayment(ListOnDisk<InsuranceEvent> ieList, Tui tui)
 	{
-		Scanner scanner = new Scanner(System.in);
 		int index = -1;
 		
-		viewInsuranceEvents();
-		
-		System.out.println("Please enter the number of the bill that you paid, or enter 0 to exit.");
-		String line = scanner.nextLine();
-		index = Integer.parseInt(line) - 1;
+		index = tui.getIndex(ieList, "record as paid");
 		try
 		{
-			ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
-			insuranceEventList.get(index).pay();
-			saveEvents(insuranceEventList);
+			InsuranceEvent temp = ieList.get(index);
+			temp.pay();
+			ieList.set(index, temp);
 		}
 		catch (IndexOutOfBoundsException ex)
 		{
-			System.out.println("No bills marked as paid.");
+			tui.noActionTaken();
 		}
 	}
 	
-	public static boolean anythingDueSoon ()
+	private static void viewBillsDueSoon(ListOnDisk<InsuranceEvent> ieList, Tui tui)
 	{
-		ArrayList<InsuranceEvent> insuranceEventList = loadEvents();
-		
-		for(InsuranceEvent event : insuranceEventList)
-			if (event.shouldRemind())
-				return true;
 
-		return false;
+	}
+	
+	private static ArrayList<Integer> eventsDueSoon (ListOnDisk<InsuranceEvent> ieList)
+	{
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+
+		for (int i = 0; i < ieList.size(); i++)
+			if (ieList.get(i).getUrgency().compareTo(InsuranceEvent.Urgency.NOTDUESOON) > 0)
+				indices.add(i);
+
+		return indices;
 	}
 
+	private static ArrayList<Integer> eventsShouldRemind (ListOnDisk<InsuranceEvent> ieList)
+	{
+		ArrayList<Integer> indices = new ArrayList<Integer>();
+
+		for (int i = 0; i < ieList.size(); i++)
+			if (ieList.get(i).shouldRemind())
+				indices.add(i);
+
+		return indices;
+	}
+	
+	// This returns the events that the user was reminded of. This data is
+	// otherwise lost after running this method.
+	private static ArrayList<Integer> remind(ListOnDisk<InsuranceEvent> ieList, Tui tui)
+	{
+		ArrayList<Integer> indices = eventsShouldRemind(ieList);
+		InsuranceEvent currentEvent;
+
+		tui.remind(ieList, indices);
+		
+		for (int i = 0; i < indices.size(); i++)
+		{
+			currentEvent = ieList.get(indices.get(i));
+			currentEvent.reminderDisplayed();
+			ieList.set(indices.get(i), currentEvent);
+		}
+		
+		return indices;
+	}
+	
 	public static void main(String[] args)
-			throws InterruptedException
 	{
-		
-		int choice = 0;
+		// In case the necessary files and folders don't exist.
+		setupAppData();
+
+		Path ieFileFPath = getIEFileFPath();
+		ListOnDisk<InsuranceEvent> ieList;
+		ieList = new ListOnDisk<InsuranceEvent>(ieFileFPath);
 		Tui tui = new Tui();
-
-		System.out.println("Moose Calendar by TwoGuysInAShed Productions");
+		boolean remindExecuted = false;
+		int choice = 0;
+		ArrayList<Integer> eventsRemindedOf;
 		
-		if (anythingDueSoon())
-			System.out.println("Something due");
-
+		if (args.length > 0)
+		{
+			if (args[0].equals("r") || args[0].equals("R"))
+			{
+				eventsRemindedOf = remind(ieList, tui);
+				remindExecuted = true;
+			}
+		}
+		
 		while (choice != 7)
 		{
 			choice = tui.taskChoice();
 			switch (choice)
 			{
 			case 1 :
-				addInsuranceEvent(tui.addInsuranceEventUI());
+				addInsuranceEvent(ieList, tui);
 				break;
 			case 3 :
-				viewInsuranceEvents();
+				viewInsuranceEvents(ieList, tui);
 				break;
 			case 4 :
-				removeInsuranceEvent();
+				removeInsuranceEvent(ieList, tui);
 				break;
 			case 5 :
-				makePayment();
+				recordPayment(ieList, tui);
 				break;
 			case 6 :
+				viewBillsDueSoon(ieList, tui);
+				break;
 			case 7 :
 			default :
 			}
 		}
 
-		// This calls the windows command interpreter (cmd.exe) with
-		// flag /C and arguments start, java, and RemindersRunner. The
-		// flag tells it to execute the following strings as a command
-		// line command, viz. "start java RemindersRunner". Start is a
-		// command that opens a new console window and it itself can
-		// receive a command or program along with its arguments as an
-		// argument, and in this case, it's java RemindersRunner.
-		String[] command = { "cmd.exe", "/C", "start", "java", "RemindersRunner" };
-		ProcessBuilder runSomeCode = new ProcessBuilder(command);
-		
-		runSomeCode.directory(new File("C:\\Users\\Glew\\workspace\\Moose-Project\\bin"));
-		
-		try
-		{
-			runSomeCode.start();
-		}
-		catch (IOException ex)
-		{
-			ex.printStackTrace(); 
-		}
 	}
 }
