@@ -2,10 +2,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Scanner;
-import java.util.InputMismatchException;
 import java.util.ArrayList;
-import java.io.File;
 import java.nio.file.attribute.FileTime;
 
 
@@ -14,23 +11,33 @@ public class MooseCalendarRunner {
 	// This path simply holds the name of the file that holds the
 	// insurance event records. If we want to call it something else, we
 	// just change it here.
+	public static final String companyName;
+	public static final String programName;
 	public static final String userDirString;
-	public static final String appDataDirString;
-	public static final Path ieFileRelPath = Paths.get("ieRecords.ser");
+	public static final Path programFilesDirPath;
+	public static final Path ieFileRelPath; 
 	public static final Path ieFileAbsPath;
-	private static final Path appDataDirAbsPath;
-	// private static final Path programFilesDirAbsPath;
+	public static final Path appDataDirAbsPath;
 	private static final Path backupDirAbsPath;
 	private static final Path[] ieBackupAbsPaths;
 	static
 	{
+		// Initialize strings first.
+		companyName = "TwoGuysInAShed";
+		programName = "MooseCalendar";
 		userDirString = System.getProperty("user.home");
 		String appDataPortion = "AppData\\Local\\";
-		String ourProgramPortion = "TwoGuysInAShed\\MooseCalendar";
-		appDataDirString = appDataPortion + ourProgramPortion;
+		String ourProgramPortion = companyName + "\\" + programName;
+		String appDataDirString = appDataPortion + ourProgramPortion;
+		String programFilesString = "C:\\Program Files\\" + ourProgramPortion;
 
+		// Initialize directory paths second.
 		appDataDirAbsPath = Paths.get(userDirString).resolve(appDataDirString);
 		backupDirAbsPath = appDataDirAbsPath.resolve("Backups");
+		programFilesDirPath = Paths.get(programFilesString);
+		
+		// Initialize our file paths last.
+		ieFileRelPath = Paths.get("ieRecords.ser");
 		ieFileAbsPath = appDataDirAbsPath.resolve(ieFileRelPath);
 		ieBackupAbsPaths = new Path[4];
 		ieBackupAbsPaths[0] = backupDirAbsPath.resolve("Backup1.ser");
@@ -39,22 +46,7 @@ public class MooseCalendarRunner {
 		ieBackupAbsPaths[3] = backupDirAbsPath.resolve("Backup4.ser");
 	}
 	
-	// This method returns the actually useful path to the file. Under
-	// normal circumstances, this should be the only method we actually use
-	// for file operations.
-	public static Path getIEFileFPath()
-	{
-		Path userDirPath = Paths.get(userDirString); 
-
-		return userDirPath.resolve(appDataDirString).resolve(ieFileRelPath);
-	}
-	
-	public static Path getAppDataDirAbsPath ()
-	{
-		return Paths.get(userDirString).resolve(appDataDirString);
-	}
-	
-	private static void setup()
+	public static void setup()
 	{
 		// Creating the backup directory creates all the directories above
 		// it, so we can just do this in one go.
@@ -252,9 +244,8 @@ public class MooseCalendarRunner {
 		// In case the necessary files and folders don't exist.
 		setup();
 
-		Path ieFileFPath = getIEFileFPath();
 		ListOnDisk<InsuranceEvent> ieList;
-		ieList = new ListOnDisk<InsuranceEvent>(ieFileFPath);
+		ieList = new ListOnDisk<InsuranceEvent>(ieFileAbsPath);
 		Tui tui = new Tui();
 		boolean remindExecuted = false;
 		int choice = 0;

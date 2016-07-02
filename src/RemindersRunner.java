@@ -12,14 +12,29 @@ import java.io.IOException;
 public class RemindersRunner
 {
 	// This is just a path made up of the filename.
-	public static final Path logFileRelPath = Paths.get("LastReminderCheck.log");
-	
-	// This gives us an absolute path to the file. It depends on
-	// MooseCalendarRunner's getAppDataFPath() method.
-	public static Path getLogFileFPath()
+	private static final Path logFileRelPath; 
+	private static final Path logFileAbsPath;
+	static
 	{
-		Path appDataDirAbsPath = MooseCalendarRunner.getAppDataDirAbsPath();
-		return appDataDirAbsPath.resolve(logFileRelPath);
+		Path appDataPath = MooseCalendarRunner.appDataDirAbsPath;
+		logFileRelPath = Paths.get("LastReminderCheck.log");
+		logFileAbsPath = appDataPath.resolve(logFileRelPath);
+	}
+	
+	private static void setup()
+	{
+		MooseCalendarRunner.setup();
+		// Let's create our log file if it doesn't exist yet.
+		if (Files.notExists(logFileAbsPath))
+			try
+			{
+				Files.createFile(logFileAbsPath);
+				setLastTimeRun();
+			}
+			catch (IOException ioex)
+			{
+				ioex.printStackTrace();
+			}
 	}
 	
 	// The write method does not have to check for existence of the file.
@@ -32,7 +47,7 @@ public class RemindersRunner
 		{
 			out = new ObjectOutputStream(byteos);
 			out.writeObject(Calendar.getInstance());
-			Files.write(getLogFileFPath(), byteos.toByteArray());
+			Files.write(logFileAbsPath, byteos.toByteArray());
 		}
 		catch (IOException ioex)
 		{
@@ -48,7 +63,7 @@ public class RemindersRunner
 
 		try
 		{
-			byte[] allBytes = Files.readAllBytes(getLogFileFPath());
+			byte[] allBytes = Files.readAllBytes(logFileAbsPath);
 			ByteArrayInputStream byteis = new ByteArrayInputStream(allBytes);
 			in = new ObjectInputStream(byteis);
 			Calendar lastTimeRun = (Calendar) in.readObject();
@@ -117,9 +132,9 @@ public class RemindersRunner
 	
 	private static boolean anyReminders()
 	{
-		Path ieFileFPath = MooseCalendarRunner.getIEFileFPath();
+		Path ieFilePath = MooseCalendarRunner.ieFileAbsPath;
 		ListOnDisk<InsuranceEvent> ieList;
-		ieList = new ListOnDisk<InsuranceEvent>(ieFileFPath);
+		ieList = new ListOnDisk<InsuranceEvent>(ieFilePath);
 
 		for(int i = 0; i < ieList.size(); i++)
 			if (ieList.get(i).shouldRemind())
@@ -155,18 +170,7 @@ public class RemindersRunner
 
 	public static void main(String[] args)
 	{
-		if (Files.notExists(getLogFileFPath()))
-		{
-			try
-			{
-				Files.createFile(getLogFileFPath());
-				setLastTimeRun();
-			}
-			catch (IOException ioex)
-			{
-				ioex.printStackTrace();
-			}
-		}
+		setup();
 		
 		Calendar nextTimeToRun = getNextTimeToRun();
 		while (true)
