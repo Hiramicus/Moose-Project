@@ -22,10 +22,11 @@ public class Tui {
 		System.out.println("3. View bills");
 		System.out.println("4. Delete bills");
 		System.out.println("5. Check off bills as paid");
-		System.out.println("6. View reminders");
+		System.out.println("6. Resort List");
 		System.out.println("7. Exit");
+		
 		userChoice = s.nextInt();
-		while(!(userChoice > 0 && userChoice < 8))
+		while(!(userChoice > 0 && userChoice < 7))
 		{
 			try {
 				System.out.println("Please enter one of the choices above.");
@@ -49,8 +50,8 @@ public class Tui {
 		DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
 
 		System.out.println("Please enter the following:");
-		System.out.println("Address of the insured property:");
-		System.out.print("Number, street, & apt./suite/etc. (no commas): ");
+		System.out.println("Company name or address of the insured property:");
+		System.out.print("Company name/Number, street, & apt./suite/etc. (no commas): ");
 		tempString = s.nextLine();
 
 		System.out.print("City: ");

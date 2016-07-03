@@ -134,7 +134,7 @@ public class MooseCalendarRunner {
 		}
 	}
 	
-	private static void viewBillsDueSoon(ListOnDisk<InsuranceEvent> ieList, Tui tui)
+	private static void resortList(ListOnDisk<InsuranceEvent> ieList, Tui tui)
 	{
 
 	}
@@ -247,7 +247,7 @@ public class MooseCalendarRunner {
 			}
 		}
 		
-		while (choice != 7)
+		while (choice != 6)
 		{
 			choice = tui.taskChoice();
 			switch (choice)
@@ -265,7 +265,7 @@ public class MooseCalendarRunner {
 				recordPayment(ieList, tui);
 				break;
 			case 6 :
-				viewBillsDueSoon(ieList, tui);
+				resortList(ieList, tui);
 				break;
 			case 7 :
 			default :
