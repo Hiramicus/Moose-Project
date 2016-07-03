@@ -20,12 +20,17 @@ public class ListOnDisk<T> {
 	// Because we load from disk and save to disk after every change, we
 	// only need the file name as permanent data in memory.
 	private Path dataFile;
-	private Comparator<T> c;
 	
-	public ListOnDisk(Path file, Comparator<T> c)
+	public ListOnDisk(Path file)
 	{
 		this.dataFile = file;
-		this.c = c;
+	}
+	
+	public ListOnDisk(ListOnDisk<T> old, Path file)
+	{
+		this.dataFile = file;
+		
+		saveItems(old.loadItems());
 	}
 
 	// This method loads the contents of the file into memory.
@@ -34,7 +39,7 @@ public class ListOnDisk<T> {
 	// that it can call methods that I've not made a wrapper for. The best
 	// example is when iterating over the whole list using the
 	// for (item : list) syntax.
-	public ArrayList<T> loadItems ()
+	public ArrayList<T> loadItems()
 	{
 		ArrayList<T> list = new ArrayList<T>();
 		boolean fileIsReady = false;
@@ -97,9 +102,8 @@ public class ListOnDisk<T> {
 
 	// This method serializes and saves the array.
 	// Note that this method completely overwrites the file.
-	public void saveItems (ArrayList<T> list)
+	public void saveItems(ArrayList<T> list)
 	{
-		Collections.sort(list, c);
 		ByteArrayOutputStream byteos = new ByteArrayOutputStream();
 		ObjectOutputStream out = null;
 		try
@@ -115,21 +119,39 @@ public class ListOnDisk<T> {
 		}
 	}
 
-	public int size ()
+	public void toNewFile(Path newDataFile)
+	{
+		ArrayList<T> list = loadItems();
+		ByteArrayOutputStream byteos = new ByteArrayOutputStream();
+		ObjectOutputStream out = null;
+		try
+		{
+			out = new ObjectOutputStream(byteos);
+			for (T item : list)
+				out.writeObject(item);
+			Files.write(newDataFile, byteos.toByteArray());
+		}
+		catch (IOException ioex)
+		{
+			ioex.printStackTrace();
+		}
+	}
+
+	public int size()
 	{
 		ArrayList<T> list = loadItems();
 		
 		return list.size();
 	}
 	
-	public T get (int index)
+	public T get(int index)
 	{
 		ArrayList<T> list = loadItems();
 
 		return list.get(index);
 	}
 	
-	public void set (int index, T item)
+	public void set(int index, T item)
 	{
 		ArrayList<T> list = loadItems();
 		
@@ -137,7 +159,7 @@ public class ListOnDisk<T> {
 		saveItems(list);
 	}
 	
-	public void add (T item)
+	public void add(T item)
 	{
 		ArrayList<T> list = loadItems();
 		
@@ -145,7 +167,7 @@ public class ListOnDisk<T> {
 		saveItems(list);
 	}
 	
-	public void remove (int index)
+	public void remove(int index)
 	{
 		ArrayList<T> list = loadItems();
 		
@@ -153,4 +175,10 @@ public class ListOnDisk<T> {
 		saveItems(list);
 	}
 	
+	public void sort(Comparator<T> c)
+	{
+		ArrayList<T> list = loadItems();
+		Collections.sort(list, c);
+		saveItems(list);
+	}
 }

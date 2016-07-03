@@ -6,6 +6,7 @@ import java.util.Scanner;
 import java.util.InputMismatchException;
 import java.util.ArrayList;
 import java.io.File;
+import java.nio.file.attribute.FileTime;
 
 
 public class MooseCalendarRunner {
@@ -55,25 +56,11 @@ public class MooseCalendarRunner {
 	
 	private static void setup()
 	{
-		/*
-		String appDataDirString = "AppData\\Local\\TwoGuysInAShed\\MooseCalendar";
-
-		appDataDirAbsPath = Paths.get(appDataDirString);
-		backupDirAbsPath = appDataDirAbsPath.resolve("Backups");
-		ieFileAbsPath = appDataDirAbsPath.resolve(ieFileRelPath);
-		ieBackupAbsPaths = new Path[4];
-		ieBackupAbsPaths[0] = backupDirAbsPath.resolve("Backup1.ser");
-		ieBackupAbsPaths[1] = backupDirAbsPath.resolve("Backup2.ser");
-		ieBackupAbsPaths[2] = backupDirAbsPath.resolve("Backup3.ser");
-		ieBackupAbsPaths[3] = backupDirAbsPath.resolve("Backup4.ser");
-		*/
-
 		// Creating the backup directory creates all the directories above
 		// it, so we can just do this in one go.
 		if (Files.notExists(backupDirAbsPath))
 			try
 			{
-				System.out.println("what");
 				Files.createDirectories(backupDirAbsPath);
 			}
 			catch (IOException ioex)
@@ -193,6 +180,51 @@ public class MooseCalendarRunner {
 		return indices;
 	}
 	
+	public static void backup(ListOnDisk<InsuranceEvent> ieList)
+	{
+		// This will point to the oldest backup file.
+		int indexToOldest = 0;
+
+		// This is an array of the last modification times for the backups.
+		FileTime[] modTimes = new FileTime[4];
+
+		// This keeps track of the oldest time yet found as the array is
+		// traversed.
+		FileTime oldestTime;
+		
+		// Let's populate the modification times array first. If we find an
+		// exception, we get out without modifying anything.
+		try
+		{
+			for (int i = 0; i < 4; i++)
+				modTimes[i] = Files.getLastModifiedTime(ieBackupAbsPaths[i]);
+		}
+		catch (IOException ioex)
+		{
+			ioex.printStackTrace();
+			return;
+		}
+
+		// We put in a default in case everything comes out equal.
+		oldestTime  = modTimes[0];
+		indexToOldest = 0; 
+		
+		// This uses knock-out elimination to find the oldest time.
+		for (int i = 1; i < 4; i++)
+		{
+			if (oldestTime.compareTo(modTimes[i]) > 0)
+			{
+				oldestTime = modTimes[i];
+				indexToOldest = i;
+			}
+		}
+		Path oldestFile = ieBackupAbsPaths[indexToOldest];
+		
+		// Here we use the handy toNewFile method to do all the copying
+		// for us.
+		ieList.toNewFile(oldestFile);
+	}
+	
 	public static void main(String[] args)
 	{
 		// In case the necessary files and folders don't exist.
@@ -200,7 +232,7 @@ public class MooseCalendarRunner {
 
 		Path ieFileFPath = getIEFileFPath();
 		ListOnDisk<InsuranceEvent> ieList;
-		ieList = new ListOnDisk<InsuranceEvent>(ieFileFPath, new IEDueDateComparator());
+		ieList = new ListOnDisk<InsuranceEvent>(ieFileFPath);
 		Tui tui = new Tui();
 		boolean remindExecuted = false;
 		int choice = 0;

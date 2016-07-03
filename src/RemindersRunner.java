@@ -119,7 +119,7 @@ public class RemindersRunner
 	{
 		Path ieFileFPath = MooseCalendarRunner.getIEFileFPath();
 		ListOnDisk<InsuranceEvent> ieList;
-		ieList = new ListOnDisk<InsuranceEvent>(ieFileFPath, new IEDueDateComparator());
+		ieList = new ListOnDisk<InsuranceEvent>(ieFileFPath);
 
 		for(int i = 0; i < ieList.size(); i++)
 			if (ieList.get(i).shouldRemind())
