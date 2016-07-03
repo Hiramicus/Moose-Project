@@ -115,7 +115,6 @@ public class Tui {
 	{
 		InsuranceEvent tempEvent = new InsuranceEvent();
 		Scanner s = new Scanner(System.in);
-		String dateString;
 		String tempString;
 		DateFormat df = DateFormat.getDateInstance(DateFormat.SHORT);
 
